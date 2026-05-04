@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "syndicsage-app",
-    "slug": "syndicsage-app",
+    "name": "SyndicSage",
+    "slug": "syndicsage",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -10,21 +10,40 @@
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#1E3A5F"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": false,
+      "bundleIdentifier": "com.syndicsage.app",
+      "buildNumber": "1"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#1E3A5F"
       },
-      "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "package": "com.syndicsage.app",
+      "versionCode": 1,
+      "edgeToEdgeEnabled": true
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-apple-authentication",
+      "expo-secure-store",
+      "expo-document-picker",
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Allow SyndicSage to use Face ID for secure login."
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": ""
+      }
     }
   }
 }
