@@ -28,10 +28,9 @@ interface Vote {
 const STATUS_LABEL: Record<string, string> = { draft: 'Draft', open: 'Open', closed: 'Closed' };
 const STATUS_COLOR: Record<string, string> = { draft: '#94a3b8', open: '#4ade80', closed: '#f87171' };
 const MAJORITY_LABEL: Record<string, string> = {
-  simple: 'Simple majority',
-  absolute: 'Absolute majority',
-  qualified: 'Qualified 4/5',
-  unanimous: 'Unanimous',
+  simple:         'Simple majority',
+  three_quarters: '3/4 majority',
+  four_fifths:    '4/5 majority',
 };
 
 export default function VotingScreen() {
