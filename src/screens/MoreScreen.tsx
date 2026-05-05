@@ -9,8 +9,9 @@ import { ThemeColors } from '../constants/colors';
 import { supabase } from '../lib/supabase';
 import {
   ChevronRightIcon, LockIcon, SignOutIcon, TrashIcon,
-  UserIcon, MailIcon, VideoIcon, VoteIcon, ScalesIcon,
+  UserIcon, MailIcon, VideoIcon, VoteIcon, ScalesIcon, TicketIcon,
 } from '../components/Icons';
+import { api } from '../lib/api';
 
 export default function MoreScreen() {
   const navigation = useNavigation<any>();
@@ -19,6 +20,7 @@ export default function MoreScreen() {
   const [biometricEnabled, setBiometric] = useState(false);
   const [profileName, setProfileName]    = useState('');
   const [profileInitial, setProfileInitial] = useState('?');
+  const [openRequests, setOpenRequests]  = useState(0);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -28,6 +30,15 @@ export default function MoreScreen() {
       setProfileName(name);
       setProfileInitial(name.charAt(0).toUpperCase() || '?');
     });
+    // Count open requests across all buildings
+    api('GET', '/api/syndic/buildings').then((buildings: { id: string }[]) => {
+      Promise.all(buildings.map((b: { id: string }) =>
+        api('GET', `/api/syndic/buildings/${b.id}/requests`).catch(() => [])
+      )).then(results => {
+        const total = results.flat().filter((r: any) => r.status === 'open' || r.status === 'in_progress').length;
+        setOpenRequests(total);
+      });
+    }).catch(() => {});
   }, []);
 
   async function handleSignOut() {
@@ -100,6 +111,7 @@ export default function MoreScreen() {
           <Item colors={colors} iconBg={AMBER_BG} icon={<VideoIcon size={16} color={colors.amber} />} label="AG Meeting Room" badge="Pro" onPress={() => navigation.navigate('MeetingRoom')} />
           <Item colors={colors} iconBg={CYAN_BG}  icon={<VoteIcon size={16} color={CYAN_IC} />} label="Digital Voting" onPress={() => navigation.navigate('Voting')} />
           <Item colors={colors} iconBg={PURPLE_BG} icon={<ScalesIcon size={16} color={PURPLE_IC} />} label="AI Law Q&A" onPress={() => navigation.navigate('LawQA')} />
+          <Item colors={colors} iconBg="rgba(239,68,68,0.12)" icon={<TicketIcon size={16} color="#f87171" />} label="Requests" dot={openRequests > 0} dotLabel={openRequests > 0 ? String(openRequests) : undefined} onPress={() => navigation.navigate('Requests')} />
         </View>
 
         <Text style={styles.sectionLabel}>Security</Text>
@@ -131,9 +143,10 @@ export default function MoreScreen() {
   );
 }
 
-function Item({ colors, icon, iconBg, label, badge, rightText, rightColor, labelColor, onPress }: {
+function Item({ colors, icon, iconBg, label, badge, rightText, rightColor, labelColor, dot, dotLabel, onPress }: {
   colors: ThemeColors; icon: React.ReactNode; iconBg: string; label: string;
-  badge?: string; rightText?: string; rightColor?: string; labelColor?: string; onPress?: () => void;
+  badge?: string; rightText?: string; rightColor?: string; labelColor?: string;
+  dot?: boolean; dotLabel?: string; onPress?: () => void;
 }) {
   return (
     <TouchableOpacity style={[{
@@ -148,6 +161,11 @@ function Item({ colors, icon, iconBg, label, badge, rightText, rightColor, label
       {badge && (
         <View style={{ backgroundColor: 'rgba(245,158,11,0.15)', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 5 }}>
           <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 11, color: colors.amber }}>{badge}</Text>
+        </View>
+      )}
+      {dot && (
+        <View style={{ backgroundColor: '#ef4444', paddingHorizontal: dotLabel ? 7 : 5, paddingVertical: 2, borderRadius: 20, minWidth: 20, alignItems: 'center' }}>
+          <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 10, color: '#fff' }}>{dotLabel || ''}</Text>
         </View>
       )}
       {rightText && <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 12, color: rightColor || colors.muted }}>{rightText}</Text>}

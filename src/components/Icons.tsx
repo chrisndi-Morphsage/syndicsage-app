@@ -272,6 +272,15 @@ export function ChargesIcon({ size = 22, color = '#1E3A5F', strokeWidth = 2 }: I
   );
 }
 
+export function TicketIcon({ size = 18, color = '#1E3A5F', strokeWidth = 2 }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Rect x="2" y="6" width="20" height="12" rx="2" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
+      <Path d="M6 10h12M6 14h8" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" />
+    </Svg>
+  );
+}
+
 export function ShieldIcon({ size = 18, color = '#dc2626', strokeWidth = 2 }: IconProps) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">

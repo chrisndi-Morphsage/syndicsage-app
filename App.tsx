@@ -29,6 +29,7 @@ import MoreScreen from './src/screens/MoreScreen';
 import MeetingRoomScreen from './src/screens/MeetingRoomScreen';
 import VotingScreen from './src/screens/VotingScreen';
 import LawQAScreen from './src/screens/LawQAScreen';
+import RequestsScreen from './src/screens/RequestsScreen';
 import {
   HomeIcon, ChargesIcon, InboxIcon, DocumentsIcon, MoreIcon,
 } from './src/components/Icons';
@@ -43,6 +44,7 @@ function MoreStack() {
       <Stack.Screen name="MeetingRoom"  component={MeetingRoomScreen} />
       <Stack.Screen name="Voting"       component={VotingScreen} />
       <Stack.Screen name="LawQA"        component={LawQAScreen} />
+      <Stack.Screen name="Requests"     component={RequestsScreen} />
     </Stack.Navigator>
   );
 }
