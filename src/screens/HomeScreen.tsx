@@ -305,7 +305,7 @@ export default function HomeScreen() {
               const timeLabel = diffH < 1 ? 'now' : diffH < 24 ? `${diffH}h` : `${Math.floor(diffH / 24)}d`;
               return (
                 <ActivityRow
-                  key={i}
+                  key={`${item.date}_${item.title}`}
                   colors={colors}
                   iconBg={item.iconBg}
                   icon={item.icon}

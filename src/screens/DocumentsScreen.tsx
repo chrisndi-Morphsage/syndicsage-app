@@ -83,7 +83,7 @@ export default function DocumentsScreen() {
               const { error: upErr } = await supabase.storage.from('syndic-documents').upload(path, blob);
               if (upErr) throw upErr;
               await api('POST', `/api/syndic/buildings/${buildingId}/documents`, { name: file.name, category: 'Other', storage_path: path, size: file.size });
-              loadData();
+              await loadData();
             } catch (e: any) { Alert.alert('Upload failed', e.message); }
           }
         },

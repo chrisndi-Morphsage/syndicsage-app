@@ -145,12 +145,12 @@ export default function ChargesScreen() {
     finally { setLoading(false); setRefreshing(false); }
   }
 
-  async function markPaid(paymentId: string) {
+  async function markPaid(paymentId: string, amountDue?: number) {
     setActionId(paymentId);
     try {
       await api('PUT', `/api/syndic/payments/${paymentId}`, {
         status: 'paid',
-        amount_paid: payments.find(p => p.id === paymentId)?.amount_due,
+        amount_paid: amountDue,
       });
       if (activeBld) loadPayments(activeBld.id, period);
     } catch (e: any) { Alert.alert('Error', e.message); }
@@ -261,7 +261,7 @@ export default function ChargesScreen() {
                   <View style={styles.cardActions}>
                     <TouchableOpacity
                       style={[styles.actionBtn, styles.actionBtnPrimary, actionId === p.id && { opacity: 0.6 }]}
-                      onPress={() => markPaid(p.id)}
+                      onPress={() => markPaid(p.id, p.amount_due)}
                       disabled={actionId === p.id}
                     >
                       <Text style={styles.actionBtnPrimaryText}>✓ Mark paid</Text>
