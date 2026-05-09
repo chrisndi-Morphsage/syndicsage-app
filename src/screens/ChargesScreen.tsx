@@ -8,10 +8,8 @@ import { useTheme } from '../context/ThemeContext';
 import { useBuildingContext } from '../context/BuildingContext';
 import { ThemeColors } from '../constants/colors';
 import { api } from '../lib/api';
-import BuildingDropdown from '../components/BuildingDropdown';
 import { ChevronRightIcon } from '../components/Icons';
 
-interface Building { id: string; name: string; }
 interface Owner { id: string; name: string; unit_number?: string; }
 interface Payment {
   id: string; owner_id: string; period: string; amount_due: number;
@@ -116,7 +114,7 @@ export default function ChargesScreen() {
     legal:   { bg: 'rgba(220,38,38,0.12)',  color: colors.red,    label: 'Legal' },
   };
 
-  const { buildings, active: activeBld, setActive: setActiveBld, loading: buildingsLoading } = useBuildingContext();
+  const { active: activeBld, loading: buildingsLoading } = useBuildingContext();
   const [payments, setPayments]     = useState<Payment[]>([]);
   const [period, setPeriod]         = useState(currentPeriod());
   const [periods]                   = useState(buildPeriods());
@@ -167,7 +165,7 @@ export default function ChargesScreen() {
       <View style={styles.header}>
         <Text style={styles.title}>Charges</Text>
         <View style={styles.headerRow}>
-          <BuildingDropdown buildings={buildings} active={activeBld} onSelect={setActiveBld} noTopMargin />
+          {activeBld && <Text style={styles.buildingLabel}>{activeBld.name}</Text>}
           <PeriodDropdown period={period} periods={periods} colors={colors} onSelect={setPeriod} />
         </View>
       </View>
@@ -280,6 +278,7 @@ function makeStyles(colors: ThemeColors) {
     safe:    { flex: 1, backgroundColor: colors.bg },
     header:  { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 12, backgroundColor: colors.card, borderBottomWidth: 1, borderBottomColor: colors.border },
     title:   { fontFamily: 'CormorantGaramond_600SemiBold', fontSize: 30, color: colors.text },
+    buildingLabel: { fontFamily: 'Inter_400Regular', fontSize: 13, color: colors.muted, marginTop: 2 },
     headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginTop: 8 },
     kpiRow: { flexDirection: 'row', backgroundColor: colors.card, borderBottomWidth: 1, borderBottomColor: colors.border, marginBottom: 8 },
     kpi:    { flex: 1, paddingVertical: 12, alignItems: 'center' },

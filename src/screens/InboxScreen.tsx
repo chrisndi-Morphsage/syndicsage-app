@@ -9,9 +9,7 @@ import { useBuildingContext } from '../context/BuildingContext';
 import { ThemeColors } from '../constants/colors';
 import { api } from '../lib/api';
 import { MailIcon, WrenchIcon } from '../components/Icons';
-import BuildingDropdown from '../components/BuildingDropdown';
 
-interface Building { id: string; name: string; }
 interface Message {
   id: string; owner_id: string; sender_name: string; sender_role: 'syndic' | 'co_owner';
   subject?: string; body: string; read_by_syndic: boolean; created_at: string;
@@ -45,7 +43,7 @@ export default function InboxScreen() {
     high: colors.red, medium: colors.amber, low: colors.green,
   };
 
-  const { buildings, active: activeBld, setActive: setActiveBld, loading: buildingsLoading } = useBuildingContext();
+  const { active: activeBld, loading: buildingsLoading } = useBuildingContext();
   const [tab, setTab]               = useState<'messages' | 'requests'>('messages');
   const [messages, setMessages]     = useState<Message[]>([]);
   const [requests, setRequests]     = useState<Request[]>([]);
@@ -111,7 +109,7 @@ export default function InboxScreen() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.header}>
         <Text style={styles.title}>Inbox</Text>
-        <BuildingDropdown buildings={buildings} active={activeBld} onSelect={setActiveBld} />
+        {activeBld && <Text style={styles.buildingLabel}>{activeBld.name}</Text>}
         <View style={styles.tabs}>
           <TouchableOpacity style={[styles.tab, tab === 'messages' && styles.tabActive]} onPress={() => setTab('messages')}>
             <Text style={[styles.tabText, tab === 'messages' && styles.tabTextActive]}>
@@ -231,6 +229,7 @@ function makeStyles(colors: ThemeColors) {
     loading: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg },
     header:  { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 8, backgroundColor: colors.card, borderBottomWidth: 1, borderBottomColor: colors.border },
     title:   { fontFamily: 'CormorantGaramond_600SemiBold', fontSize: 30, color: colors.text },
+    buildingLabel: { fontFamily: 'Inter_400Regular', fontSize: 13, color: colors.muted, marginTop: 2 },
     tabs:    { flexDirection: 'row', marginTop: 10, gap: 4 },
     tab:     { flex: 1, paddingVertical: 8, alignItems: 'center', borderRadius: 8 },
     tabActive: { backgroundColor: 'rgba(30,58,95,0.08)' },
