@@ -60,7 +60,7 @@ export default function DocumentsScreen() {
   async function openDoc(doc: Doc) {
     try {
       const { data, error } = await supabase.storage.from('syndic-documents').createSignedUrl(doc.storage_path, 60);
-      if (error) throw error;
+      if (error || !data?.signedUrl) throw error ?? new Error('No signed URL returned');
       await Linking.openURL(data.signedUrl);
     } catch (e: any) { Alert.alert('Error', e.message); }
   }

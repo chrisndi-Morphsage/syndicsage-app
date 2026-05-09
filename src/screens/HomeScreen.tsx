@@ -148,7 +148,8 @@ export default function HomeScreen() {
   const overdue  = payments.filter(p => p.status === 'overdue' || p.status === 'late').length;
   const colPct   = payments.length > 0 ? Math.round(paid / payments.length * 100) : 0;
   const agDays   = active?.ag_date
-    ? Math.ceil((new Date(active.ag_date + 'T00:00:00').getTime() - Date.now()) / 86400000) : null;
+    ? (() => { const d = new Date(active.ag_date + 'T00:00:00'); return isNaN(d.getTime()) ? null : Math.ceil((d.getTime() - Date.now()) / 86400000); })()
+    : null;
   const openClaims = claims.filter(c => c.status === 'open' || c.status === 'in_progress').length;
   const healthBad  = overdue > 0 || openClaims > 0;
 
@@ -162,7 +163,7 @@ export default function HomeScreen() {
   if (agDays !== null && agDays <= 30 && agDays >= 0) attentionItems.push({
     icon: <AlertIcon size={15} color={colors.amber} />,
     title: 'AG convocation due',
-    sub: `Send by ${new Date(active!.ag_date! + 'T00:00:00').toLocaleDateString('fr-BE', { day: 'numeric', month: 'short' })} — ${agDays}d left`,
+    sub: `Send by ${new Date(active?.ag_date + 'T00:00:00').toLocaleDateString('fr-BE', { day: 'numeric', month: 'short' })} — ${agDays}d left`,
   });
   if (openClaims > 0) attentionItems.push({
     icon: <ShieldIcon size={15} color={colors.amber} />,

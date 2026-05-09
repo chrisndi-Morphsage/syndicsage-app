@@ -45,9 +45,10 @@ export default function VotingScreen() {
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
-    api('GET', '/api/syndic/buildings').then((data: Building[]) => {
-      setBuildings(data);
-      if (data.length) setActive(data[0]);
+    api('GET', '/api/syndic/buildings').then((data: any) => {
+      const blds: Building[] = data.buildings || data || [];
+      setBuildings(blds);
+      if (blds.length) setActive(blds[0]);
     }).catch(() => {});
   }, []);
 
