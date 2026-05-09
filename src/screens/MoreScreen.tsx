@@ -131,7 +131,7 @@ export default function MoreScreen() {
         <Text style={styles.sectionLabel}>Account</Text>
         <View style={styles.items}>
           <Item colors={colors} iconBg={MUTED_BG} icon={<UserIcon size={16} color={colors.muted} />} label="Profile & settings" />
-          <Item colors={colors} iconBg={MUTED_BG} icon={<MailIcon size={16} color={colors.muted} />} label="Gmail integration" rightText="Connected" rightColor={colors.green} />
+          <Item colors={colors} iconBg={MUTED_BG} icon={<MailIcon size={16} color={colors.muted} />} label="Gmail integration" />
           <Item colors={colors} iconBg={RED_BG} icon={<SignOutIcon size={16} color={colors.red} />} label="Sign out" labelColor={colors.red} onPress={handleSignOut} />
           <Item colors={colors} iconBg={RED_BG} icon={<TrashIcon size={16} color={colors.red} />} label="Delete account" labelColor={colors.red} onPress={handleDeleteAccount} />
         </View>

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, RefreshControl, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, RefreshControl, ActivityIndicator, Alert, TextInput, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as DocumentPicker from 'expo-document-picker';
 import { useTheme } from '../context/ThemeContext';
@@ -37,6 +37,7 @@ export default function DocumentsScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [buildingId, setBuildingId] = useState<string | null>(null);
   const [buildingName, setBuildingName] = useState('');
+  const [search, setSearch] = useState('');
 
   useEffect(() => {
     api('GET', '/api/syndic/buildings').then(data => {
@@ -60,7 +61,7 @@ export default function DocumentsScreen() {
     try {
       const { data, error } = await supabase.storage.from('syndic-documents').createSignedUrl(doc.storage_path, 60);
       if (error) throw error;
-      Alert.alert('Download ready', `Document: ${doc.name}\n\nOpen in browser to download.`);
+      await Linking.openURL(data.signedUrl);
     } catch (e: any) { Alert.alert('Error', e.message); }
   }
 
@@ -90,7 +91,9 @@ export default function DocumentsScreen() {
     } catch (e: any) { Alert.alert('Error', e.message); }
   }
 
-  const filtered = cat === 'All' ? docs : docs.filter(d => d.category === cat);
+  const filtered = docs
+    .filter(d => cat === 'All' || d.category === cat)
+    .filter(d => !search || d.name.toLowerCase().includes(search.toLowerCase()));
 
   if (loading) return <View style={styles.loading}><ActivityIndicator color={colors.amber} size="large" /></View>;
 
@@ -108,7 +111,14 @@ export default function DocumentsScreen() {
 
           <View style={styles.searchWrap}>
             <SearchIcon size={16} color={colors.muted} />
-            <Text style={styles.searchPlaceholder}>Search documents…</Text>
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search documents…"
+              placeholderTextColor={colors.muted}
+              value={search}
+              onChangeText={setSearch}
+              autoCorrect={false}
+            />
           </View>
 
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.catsWrap} contentContainerStyle={{ paddingHorizontal: 24, gap: 8, paddingBottom: 16 }}>
@@ -164,7 +174,7 @@ function makeStyles(colors: ThemeColors) {
       backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border,
       borderRadius: 12, paddingHorizontal: 14, paddingVertical: 11,
     },
-    searchPlaceholder: { fontFamily: 'Inter_400Regular', fontSize: 14, color: colors.muted },
+    searchInput: { flex: 1, fontFamily: 'Inter_400Regular', fontSize: 14, color: colors.text },
     catsWrap: { flexGrow: 0 },
     cat: { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.card },
     catActive: { backgroundColor: colors.amber, borderColor: colors.amber },

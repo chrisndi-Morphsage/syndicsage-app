@@ -17,7 +17,8 @@ interface Building {
   id: string; name: string; unit_count: number; city?: string;
   ag_date?: string; reserve_fund_balance?: number; annual_budget?: number;
 }
-interface Payment { status: string; amount_due?: number; }
+interface Payment { status: string; amount_due?: number; paid_at?: string; owner_name?: string; unit_number?: string; amount?: number; }
+interface Expense { created_at: string; supplier?: string; description?: string; amount?: number; }
 interface Claim { status: string; }
 
 // ── pulsing dot ──────────────────────────────────────────────────────────────
@@ -83,6 +84,7 @@ export default function HomeScreen() {
   const [buildings, setBuildings]   = useState<Building[]>([]);
   const [active, setActive]         = useState<Building | null>(null);
   const [payments, setPayments]     = useState<Payment[]>([]);
+  const [expenses, setExpenses]     = useState<Expense[]>([]);
   const [claims, setClaims]         = useState<Claim[]>([]);
   const [loading, setLoading]       = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -118,12 +120,14 @@ export default function HomeScreen() {
   async function loadBuildingData(bldId: string) {
     const period = currentPeriod();
     try {
-      const [pData, cData] = await Promise.all([
+      const [pData, cData, eData] = await Promise.all([
         api('GET', `/api/syndic/buildings/${bldId}/payments?period=${period}`).catch(() => []),
         api('GET', `/api/syndic/buildings/${bldId}/claims`).catch(() => []),
+        api('GET', `/api/syndic/buildings/${bldId}/expenses`).catch(() => []),
       ]);
       setPayments(pData.payments || pData || []);
       setClaims(cData.claims || cData || []);
+      setExpenses(eData.expenses || eData || []);
     } catch (e) { console.error(e); }
   }
 
@@ -268,31 +272,50 @@ export default function HomeScreen() {
         {/* ── Recent activity ── */}
         <Text style={styles.sectionHeading}>Recent activity</Text>
         <View>
-          <ActivityRow
-            colors={colors}
-            iconBg="rgba(22,163,74,0.15)"
-            icon={<CheckIcon size={15} color={colors.green} />}
-            title="Payment received"
-            sub={`Unit 4 — ${currentPeriod()}`}
-            time="2h"
-          />
-          <ActivityRow
-            colors={colors}
-            iconBg="rgba(8,145,178,0.15)"
-            icon={<MailIcon size={15} color={colors.cyan} />}
-            title="Reminder sent"
-            sub="3 owners notified"
-            time="1d"
-          />
-          <ActivityRow
-            colors={colors}
-            iconBg="rgba(245,158,11,0.15)"
-            icon={<FolderIcon size={15} color={colors.amber2} />}
-            title="Document uploaded"
-            sub="AG Minutes 2026"
-            time="3d"
-            last
-          />
+          {(() => {
+            type ActivityItem = { date: string; title: string; sub: string; iconBg: string; icon: React.ReactNode; };
+            const items: ActivityItem[] = [];
+            payments.filter(p => p.status === 'paid' && p.paid_at).forEach(p => {
+              items.push({
+                date: p.paid_at!,
+                title: 'Payment received',
+                sub: [p.owner_name, p.unit_number ? `Unit ${p.unit_number}` : null].filter(Boolean).join(' — ') || 'Owner',
+                iconBg: 'rgba(22,163,74,0.15)',
+                icon: <CheckIcon size={15} color={colors.green} />,
+              });
+            });
+            expenses.forEach(e => {
+              items.push({
+                date: e.created_at,
+                title: 'Expense added',
+                sub: [e.supplier, e.description].filter(Boolean).join(' — ') || 'Expense',
+                iconBg: 'rgba(245,158,11,0.15)',
+                icon: <FolderIcon size={15} color={colors.amber2} />,
+              });
+            });
+            items.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+            const top = items.slice(0, 4);
+            if (top.length === 0) {
+              return <Text style={{ color: colors.muted, fontSize: 13, paddingVertical: 12 }}>No recent activity.</Text>;
+            }
+            return top.map((item, i) => {
+              const diffMs = Date.now() - new Date(item.date).getTime();
+              const diffH = Math.floor(diffMs / 3600000);
+              const timeLabel = diffH < 1 ? 'now' : diffH < 24 ? `${diffH}h` : `${Math.floor(diffH / 24)}d`;
+              return (
+                <ActivityRow
+                  key={i}
+                  colors={colors}
+                  iconBg={item.iconBg}
+                  icon={item.icon}
+                  title={item.title}
+                  sub={item.sub}
+                  time={timeLabel}
+                  last={i === top.length - 1}
+                />
+              );
+            });
+          })()}
         </View>
 
         <View style={{ height: 36 }} />
