@@ -43,6 +43,7 @@ export default function DocumentsScreen() {
 
   async function loadData() {
     if (!active?.id) return;
+    setLoading(true);
     try {
       const data = await api('GET', `/api/syndic/buildings/${active.id}/documents`);
       setDocs(data.documents || data || []);
@@ -89,7 +90,7 @@ export default function DocumentsScreen() {
     .filter(d => cat === 'All' || d.category === cat)
     .filter(d => !search || d.name.toLowerCase().includes(search.toLowerCase()));
 
-  if (buildingsLoading || loading) return <View style={styles.loading}><ActivityIndicator color={colors.amber} size="large" /></View>;
+  if ((buildingsLoading || loading) && !refreshing) return <View style={styles.loading}><ActivityIndicator color={colors.amber} size="large" /></View>;
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
