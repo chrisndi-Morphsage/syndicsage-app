@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../context/ThemeContext';
+import { useBuildingContext } from '../context/BuildingContext';
 import { ThemeColors } from '../constants/colors';
 import { api } from '../lib/api';
 import { MailIcon, WrenchIcon } from '../components/Icons';
@@ -44,29 +45,17 @@ export default function InboxScreen() {
     high: colors.red, medium: colors.amber, low: colors.green,
   };
 
+  const { buildings, active: activeBld, setActive: setActiveBld, loading: buildingsLoading } = useBuildingContext();
   const [tab, setTab]               = useState<'messages' | 'requests'>('messages');
-  const [buildings, setBuildings]   = useState<Building[]>([]);
-  const [activeBld, setActiveBld]   = useState<Building | null>(null);
   const [messages, setMessages]     = useState<Message[]>([]);
   const [requests, setRequests]     = useState<Request[]>([]);
-  const [loading, setLoading]       = useState(true);
+  const [loading, setLoading]       = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [replyId, setReplyId]       = useState<string | null>(null);
   const [replyText, setReplyText]   = useState('');
   const [sending, setSending]       = useState(false);
 
-  useEffect(() => { loadBuildings(); }, []);
   useEffect(() => { if (activeBld) loadData(activeBld.id); }, [activeBld, tab]);
-
-  async function loadBuildings() {
-    try {
-      const data = await api('GET', '/api/syndic/buildings');
-      const blds: Building[] = data.buildings || data || [];
-      setBuildings(blds);
-      if (blds.length) setActiveBld(blds[0]);
-    } catch (e) { console.error(e); }
-    finally { setLoading(false); }
-  }
 
   async function loadData(bldId: string) {
     setLoading(true);
@@ -114,7 +103,7 @@ export default function InboxScreen() {
   const unreadCount  = messages.filter(m => m.sender_role === 'co_owner' && !m.read_by_syndic).length;
   const openRequests = requests.filter(r => r.status === 'open' || r.status === 'in_progress').length;
 
-  if (loading && !refreshing) return (
+  if ((buildingsLoading || loading) && !refreshing) return (
     <View style={styles.loading}><ActivityIndicator color={colors.amber} size="large" /></View>
   );
 

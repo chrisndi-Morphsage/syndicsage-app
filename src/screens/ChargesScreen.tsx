@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../context/ThemeContext';
+import { useBuildingContext } from '../context/BuildingContext';
 import { ThemeColors } from '../constants/colors';
 import { api } from '../lib/api';
 import BuildingDropdown from '../components/BuildingDropdown';
@@ -115,26 +116,15 @@ export default function ChargesScreen() {
     legal:   { bg: 'rgba(220,38,38,0.12)',  color: colors.red,    label: 'Legal' },
   };
 
-  const [buildings, setBuildings]   = useState<Building[]>([]);
-  const [activeBld, setActiveBld]   = useState<Building | null>(null);
+  const { buildings, active: activeBld, setActive: setActiveBld, loading: buildingsLoading } = useBuildingContext();
   const [payments, setPayments]     = useState<Payment[]>([]);
   const [period, setPeriod]         = useState(currentPeriod());
   const [periods]                   = useState(buildPeriods());
-  const [loading, setLoading]       = useState(true);
+  const [loading, setLoading]       = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [actionId, setActionId]     = useState<string | null>(null);
 
-  useEffect(() => { loadBuildings(); }, []);
   useEffect(() => { if (activeBld) loadPayments(activeBld.id, period); }, [activeBld, period]);
-
-  async function loadBuildings() {
-    try {
-      const data = await api('GET', '/api/syndic/buildings');
-      const blds: Building[] = data.buildings || data || [];
-      setBuildings(blds);
-      if (blds.length) setActiveBld(blds[0]);
-    } catch (e) { console.error(e); }
-  }
 
   async function loadPayments(bldId: string, p: string) {
     setLoading(true);
@@ -209,7 +199,7 @@ export default function ChargesScreen() {
         )}
 
         {/* ── Content ── */}
-        {loading && !refreshing ? (
+        {(buildingsLoading || loading) && !refreshing ? (
           <View style={{ paddingTop: 60, alignItems: 'center' }}>
             <ActivityIndicator color={colors.amber} size="large" />
           </View>

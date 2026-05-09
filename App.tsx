@@ -20,6 +20,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useAuth } from './src/hooks/useAuth';
 import { lightColors } from './src/constants/colors';
 import { ThemeProvider, useTheme } from './src/context/ThemeContext';
+import { BuildingProvider } from './src/context/BuildingContext';
 import LoginScreen from './src/screens/LoginScreen';
 import HomeScreen from './src/screens/HomeScreen';
 import ChargesScreen from './src/screens/ChargesScreen';
@@ -159,7 +160,7 @@ export default function App() {
     <ThemeProvider>
       <SafeAreaProvider>
         <NavigationContainer>
-          {session ? <MainApp /> : <LoginScreen />}
+          {session ? <BuildingProvider><MainApp /></BuildingProvider> : <LoginScreen />}
         </NavigationContainer>
       </SafeAreaProvider>
     </ThemeProvider>

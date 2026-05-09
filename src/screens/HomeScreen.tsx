@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../context/ThemeContext';
+import { useBuildingContext } from '../context/BuildingContext';
 import { ThemeColors } from '../constants/colors';
 import { api } from '../lib/api';
 import { supabase } from '../lib/supabase';
@@ -81,12 +82,11 @@ export default function HomeScreen() {
   const { colors, isDark, toggleTheme } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
 
-  const [buildings, setBuildings]   = useState<Building[]>([]);
-  const [active, setActive]         = useState<Building | null>(null);
+  const { buildings, active, setActive, loading: buildingsLoading, refresh: refreshBuildings } = useBuildingContext();
   const [payments, setPayments]     = useState<Payment[]>([]);
   const [expenses, setExpenses]     = useState<Expense[]>([]);
   const [claims, setClaims]         = useState<Claim[]>([]);
-  const [loading, setLoading]       = useState(true);
+  const [dataLoading, setDataLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [userName, setUserName]     = useState('');
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -100,25 +100,15 @@ export default function HomeScreen() {
       const n = meta?.first_name || meta?.full_name?.split(' ')[0] || meta?.name || session?.user?.email?.split('@')[0] || '';
       setUserName(n ? n.charAt(0).toUpperCase() + n.slice(1) : '');
     });
-    loadBuildings();
   }, []);
 
   useEffect(() => {
     if (active) loadBuildingData(active.id);
   }, [active]);
 
-  async function loadBuildings() {
-    try {
-      const data = await api('GET', '/api/syndic/buildings');
-      const blds: Building[] = data.buildings || data || [];
-      setBuildings(blds);
-      if (blds.length) setActive(blds[0]);
-    } catch (e) { console.error(e); }
-    finally { setLoading(false); setRefreshing(false); }
-  }
-
   async function loadBuildingData(bldId: string) {
     const period = currentPeriod();
+    setDataLoading(true);
     try {
       const [pData, cData, eData] = await Promise.all([
         api('GET', `/api/syndic/buildings/${bldId}/payments?period=${period}`).catch(() => []),
@@ -129,6 +119,7 @@ export default function HomeScreen() {
       setClaims(cData.claims || cData || []);
       setExpenses(eData.expenses || eData || []);
     } catch (e) { console.error(e); }
+    finally { setDataLoading(false); }
   }
 
   function currentPeriod() {
@@ -138,7 +129,7 @@ export default function HomeScreen() {
 
   async function onRefresh() {
     setRefreshing(true);
-    await loadBuildings();
+    await refreshBuildings();
     if (active) await loadBuildingData(active.id);
     setRefreshing(false);
   }
@@ -171,7 +162,7 @@ export default function HomeScreen() {
     sub: 'Review from the web app',
   });
 
-  if (loading) {
+  if ((buildingsLoading || dataLoading) && !refreshing) {
     return <View style={styles.loadingWrap}><ActivityIndicator color={colors.amber} size="large" /></View>;
   }
 

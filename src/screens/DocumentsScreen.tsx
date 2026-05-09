@@ -3,6 +3,7 @@ import { View, Text, ScrollView, StyleSheet, TouchableOpacity, RefreshControl, A
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as DocumentPicker from 'expo-document-picker';
 import { useTheme } from '../context/ThemeContext';
+import { useBuildingContext } from '../context/BuildingContext';
 import { ThemeColors } from '../constants/colors';
 import { api } from '../lib/api';
 import { supabase } from '../lib/supabase';
@@ -31,27 +32,19 @@ export default function DocumentsScreen() {
     Other:      colors.muted,
   };
 
+  const { active, loading: buildingsLoading } = useBuildingContext();
   const [docs, setDocs]             = useState<Doc[]>([]);
   const [cat, setCat]               = useState('All');
-  const [loading, setLoading]       = useState(true);
+  const [loading, setLoading]       = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [buildingId, setBuildingId] = useState<string | null>(null);
-  const [buildingName, setBuildingName] = useState('');
   const [search, setSearch] = useState('');
 
-  useEffect(() => {
-    api('GET', '/api/syndic/buildings').then(data => {
-      const blds = data.buildings || data || [];
-      if (blds.length > 0) { setBuildingId(blds[0].id); setBuildingName(blds[0].name); }
-    });
-  }, []);
-
-  useEffect(() => { if (buildingId) loadData(); }, [buildingId]);
+  useEffect(() => { if (active?.id) loadData(); }, [active?.id]);
 
   async function loadData() {
-    if (!buildingId) return;
+    if (!active?.id) return;
     try {
-      const data = await api('GET', `/api/syndic/buildings/${buildingId}/documents`);
+      const data = await api('GET', `/api/syndic/buildings/${active.id}/documents`);
       setDocs(data.documents || data || []);
     } catch (e) { console.error(e); }
     finally { setLoading(false); setRefreshing(false); }
@@ -66,7 +59,8 @@ export default function DocumentsScreen() {
   }
 
   async function uploadDoc() {
-    if (!buildingId) return;
+    if (!active?.id) return;
+    const bldId = active.id;
     try {
       const result = await DocumentPicker.getDocumentAsync({ type: '*/*', copyToCacheDirectory: true });
       if (result.canceled) return;
@@ -77,12 +71,12 @@ export default function DocumentsScreen() {
           text: 'Upload', onPress: async () => {
             try {
               const { data: { session } } = await supabase.auth.getSession();
-              const path = `${session?.user.id}/${buildingId}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+              const path = `${session?.user.id}/${bldId}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
               const response = await fetch(file.uri);
               const blob = await response.blob();
               const { error: upErr } = await supabase.storage.from('syndic-documents').upload(path, blob);
               if (upErr) throw upErr;
-              await api('POST', `/api/syndic/buildings/${buildingId}/documents`, { name: file.name, category: 'Other', storage_path: path, size: file.size });
+              await api('POST', `/api/syndic/buildings/${bldId}/documents`, { name: file.name, category: 'Other', storage_path: path, size: file.size });
               await loadData();
             } catch (e: any) { Alert.alert('Upload failed', e.message); }
           }
@@ -95,7 +89,7 @@ export default function DocumentsScreen() {
     .filter(d => cat === 'All' || d.category === cat)
     .filter(d => !search || d.name.toLowerCase().includes(search.toLowerCase()));
 
-  if (loading) return <View style={styles.loading}><ActivityIndicator color={colors.amber} size="large" /></View>;
+  if (buildingsLoading || loading) return <View style={styles.loading}><ActivityIndicator color={colors.amber} size="large" /></View>;
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -106,7 +100,7 @@ export default function DocumentsScreen() {
         >
           <View style={styles.header}>
             <Text style={styles.title}>Documents</Text>
-            <Text style={styles.sub}>{buildingName || 'Your building'}</Text>
+            <Text style={styles.sub}>{active?.name || 'Your building'}</Text>
           </View>
 
           <View style={styles.searchWrap}>
